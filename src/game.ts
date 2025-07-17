@@ -11,6 +11,10 @@ import { setupKeyboardListeners, isDownKeyPressed, isUpKeyPressed, isLeftKeyPres
 import { getSpriteFrame } from './spritesheet';
 import './style.css';
 import ninjaFullUrl from '/assets/ninja_full.png?url';
+import cloudsBgUrl from '/assets/Clouds3/1.png?url';
+import moonUrl from '/assets/Clouds3/2.png?url';
+import cloudsNearUrl from '/assets/Clouds3/3.png?url';
+import cloudsFarUrl from '/assets/Clouds3/4.png?url';
 
 /** Canvas and rendering context */
 const canvas = document.getElementById('gameCanvas') as HTMLCanvasElement;
@@ -25,6 +29,16 @@ const gravity = 0.3;
 /** Player sprite image */
 const playerImg = new Image();
 playerImg.src = ninjaFullUrl;
+
+/** Parallax background images */
+const cloudsBgImg = new Image();
+cloudsBgImg.src = cloudsBgUrl;
+const moonImg = new Image();
+moonImg.src = moonUrl;
+const cloudsNearImg = new Image();
+cloudsNearImg.src = cloudsNearUrl;
+const cloudsFarImg = new Image();
+cloudsFarImg.src = cloudsFarUrl;
 
 /**
  * Update game state: player movement, physics, animation.
@@ -58,8 +72,8 @@ function update() {
   player.y += player.vy;
 
   // Ground collision
-  if (player.y + player.height >= canvas.height - 20) {
-    player.y = canvas.height - 20 - player.height;
+  if (player.y + player.height >= canvas.height - 10) {
+    player.y = canvas.height - 10 - player.height;
     player.vy = 0;
     player.onGround = true;
   }
@@ -135,9 +149,23 @@ function update() {
 function render() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Draw ground
-  ctx.fillStyle = '#444';
-  ctx.fillRect(0, canvas.height - 60, canvas.width, 60);
+  // Parallax background layers
+  // 1. Main background (static)
+  ctx.drawImage(cloudsBgImg, 0, 0, canvas.width, canvas.height);
+
+  // 2. Far clouds (move slowly)
+  const farCloudsOffset = (player.x * 0.1) % canvas.width;
+  ctx.drawImage(cloudsFarImg, -farCloudsOffset, 0, canvas.width, canvas.height);
+  ctx.drawImage(cloudsFarImg, canvas.width - farCloudsOffset, 0, canvas.width, canvas.height);
+
+  // 3. Moon (moves a bit faster than far clouds)
+  const moonOffset = (player.x * 0.15) % canvas.width;
+  ctx.drawImage(moonImg, canvas.width * 0.7 - moonOffset, canvas.height * 0.1, canvas.width * 0.3, canvas.height * 0.3);
+
+  // 4. Near clouds (move faster)
+  const nearCloudsOffset = (player.x * 0.3) % canvas.width;
+  ctx.drawImage(cloudsNearImg, -nearCloudsOffset, 0, canvas.width, canvas.height);
+  ctx.drawImage(cloudsNearImg, canvas.width - nearCloudsOffset, 0, canvas.width, canvas.height);
 
   // Select animation for current state
   let anim: Animation;
@@ -188,9 +216,26 @@ function gameLoop() {
 }
 
 /**
+ * Loads all game images and resolves when all are ready.
+ */
+async function prepareAssets(): Promise<void> {
+  const images = [playerImg, cloudsBgImg, moonImg, cloudsNearImg, cloudsFarImg];
+  await Promise.all(images.map(img => {
+    return new Promise<void>(resolve => {
+      if (img.complete) {
+        resolve();
+      } else {
+        img.onload = () => resolve();
+      }
+    });
+  }));
+}
+
+/**
  * Initialize the game. Loads assets and starts the game loop.
  */
-export function init() {
+export async function init() {
   setupKeyboardListeners();
-  playerImg.onload = gameLoop;
+  await prepareAssets();
+  gameLoop();
 }
