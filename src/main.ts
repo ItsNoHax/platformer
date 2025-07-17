@@ -1,5 +1,5 @@
 import './style.css'
-import ninjaFullUrl from '../public/assets/ninja_full.png';
+import ninjaFullUrl from '/assets/ninja_full.png?url';
 
 const canvas = document.getElementById('gameCanvas') as HTMLCanvasElement;
 const ctx = canvas.getContext('2d')!;
@@ -202,6 +202,7 @@ function render() {
   let sy = anim.row * anim.height;
   let sw = anim.width;
   let sh = anim.height;
+  console.log({ sx, sy, sw, sh })
   // Draw player larger (zoom 1.5x)
   const zoom = 1.5;
   const drawHeight = player.height * zoom;
