@@ -167,6 +167,10 @@ function render() {
   ctx.drawImage(cloudsNearImg, -nearCloudsOffset, 0, canvas.width, canvas.height);
   ctx.drawImage(cloudsNearImg, canvas.width - nearCloudsOffset, 0, canvas.width, canvas.height);
 
+  // Draw ground edge (10px black layer)
+  ctx.fillStyle = '#222';
+  ctx.fillRect(0, canvas.height - 10, canvas.width, 10);
+
   // Select animation for current state
   let anim: Animation;
   switch (player.state) {
