@@ -154,6 +154,10 @@ function update() {
     default:
       anim = idleAnim;
   }
+  // Clamp frameIndex to valid range for current animation
+  if (player.frameIndex > anim.frames - 1) {
+    player.frameIndex = anim.frames - 1;
+  }
   player.frameTimer++;
   if (player.state === 'crouch') {
     // Play crouch animation once, then hold last frame
