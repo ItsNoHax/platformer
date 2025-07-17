@@ -116,6 +116,17 @@ function update() {
     player.onGround = true;
   }
 
+  // Map edge collision (left and right) using drawWidth
+  const zoom = 1.5;
+  const drawWidth = player.width * zoom;
+  if (player.x < 0) {
+    player.x = 0;
+    player.vx = 0;
+  } else if (player.x + drawWidth > canvas.width) {
+    player.x = canvas.width - drawWidth;
+    player.vx = 0;
+  }
+
   // Determine player state
   if (!player.onGround) {
     player.state = 'jump';
