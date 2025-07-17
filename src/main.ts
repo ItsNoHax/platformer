@@ -206,7 +206,7 @@ function render() {
   let sy = anim.row * anim.height;
   let sw = anim.width;
   let sh = anim.height;
-  console.log({ sx, sy, sw, sh })
+  
   // Draw player larger (zoom 1.5x)
   const zoom = 1.5;
   const drawHeight = player.height * zoom;
