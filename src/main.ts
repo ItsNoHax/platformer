@@ -1,10 +1,5 @@
 import './style.css'
 
-// Remove the default Vite HTML and set up a canvas for the game
-document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-  <canvas id="gameCanvas" width="960" height="540" style="background: #222; display: block; margin: 0 auto;"></canvas>
-`;
-
 const canvas = document.getElementById('gameCanvas') as HTMLCanvasElement;
 const ctx = canvas.getContext('2d')!;
 
