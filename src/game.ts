@@ -1,0 +1,196 @@
+/**
+ * Main game logic for the platformer.
+ * Handles player input, physics, animation, and rendering.
+ *
+ * Exports the init function to start the game.
+ */
+import { createPlayer } from './player';
+import { idleAnim, walkAnim, crouchAnim, standAnim, jumpAnim } from './animations';
+import type { Animation } from './animations';
+import { setupKeyboardListeners, isDownKeyPressed, isUpKeyPressed, isLeftKeyPressed, isRightKeyPressed } from './keyboard';
+import { getSpriteFrame } from './spritesheet';
+import './style.css';
+import ninjaFullUrl from '/assets/ninja_full.png?url';
+
+/** Canvas and rendering context */
+const canvas = document.getElementById('gameCanvas') as HTMLCanvasElement;
+const ctx = canvas.getContext('2d')!;
+
+/** Player instance */
+const player = createPlayer();
+
+/** Game logic */
+const gravity = 0.3;
+
+/** Player sprite image */
+const playerImg = new Image();
+playerImg.src = ninjaFullUrl;
+
+/**
+ * Update game state: player movement, physics, animation.
+ */
+function update() {
+  player.isWalking = false;
+  // Handle left/right/crouch movement
+  if (isDownKeyPressed()) {
+    player.vx = 0;
+  } else if (isLeftKeyPressed()) {
+    player.vx = -player.speed;
+    player.facing = -1;
+    player.isWalking = true;
+  } else if (isRightKeyPressed()) {
+    player.vx = player.speed;
+    player.facing = 1;
+    player.isWalking = true;
+  } else {
+    player.vx = 0;
+  }
+
+  // Jumping
+  if (isUpKeyPressed() && player.onGround) {
+    player.vy = player.jumpPower;
+    player.onGround = false;
+  }
+
+  // Apply gravity and update position
+  player.vy += gravity;
+  player.x += player.vx;
+  player.y += player.vy;
+
+  // Ground collision
+  if (player.y + player.height >= canvas.height - 20) {
+    player.y = canvas.height - 20 - player.height;
+    player.vy = 0;
+    player.onGround = true;
+  }
+
+  // Map edge collision (left/right, using scaled width)
+  const zoom = 1.5;
+  const drawWidth = player.width * zoom;
+  if (player.x < 0) {
+    player.x = 0;
+    player.vx = 0;
+  } else if (player.x + drawWidth > canvas.width) {
+    player.x = canvas.width - drawWidth;
+    player.vx = 0;
+  }
+
+  // Determine player animation state
+  if (!player.onGround) {
+    player.state = 'jump';
+  } else if (isDownKeyPressed()) {
+    player.state = 'crouch';
+  } else if (player.isWalking) {
+    player.state = 'walk';
+  } else if (player.state === 'crouch' && !isDownKeyPressed()) {
+    player.state = 'stand';
+  } else {
+    player.state = 'idle';
+  }
+
+  // Animation update
+  let anim: Animation;
+  switch (player.state) {
+    case 'walk':
+      anim = walkAnim;
+      break;
+    case 'crouch':
+      anim = crouchAnim;
+      break;
+    case 'stand':
+      anim = standAnim;
+      break;
+    case 'jump':
+      anim = jumpAnim;
+      break;
+    default:
+      anim = idleAnim;
+  }
+  // Clamp frameIndex to valid range for current animation
+  if (player.frameIndex > anim.frames - 1) {
+    player.frameIndex = anim.frames - 1;
+  }
+  player.frameTimer++;
+  if (player.state === 'crouch') {
+    // Play crouch animation once, then hold last frame
+    if (player.frameIndex < anim.frames - 1 && player.frameTimer >= 60 / anim.frameRate) {
+      player.frameIndex++;
+      player.frameTimer = 0;
+    }
+  } else {
+    if (player.frameTimer >= 60 / anim.frameRate) {
+      player.frameIndex = (player.frameIndex + 1) % anim.frames;
+      player.frameTimer = 0;
+    }
+  }
+  if (player.state === 'idle') {
+    player.frameIndex = 0;
+    player.frameTimer = 0;
+  }
+}
+
+/**
+ * Render the game scene and player.
+ */
+function render() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Draw ground
+  ctx.fillStyle = '#444';
+  ctx.fillRect(0, canvas.height - 60, canvas.width, 60);
+
+  // Select animation for current state
+  let anim: Animation;
+  switch (player.state) {
+    case 'walk':
+      anim = walkAnim;
+      break;
+    case 'crouch':
+      anim = crouchAnim;
+      break;
+    case 'stand':
+      anim = standAnim;
+      break;
+    case 'jump':
+      anim = jumpAnim;
+      break;
+    default:
+      anim = idleAnim;
+  }
+  // Use spritesheet helper to get frame
+  const [sx, sy, sw, sh] = getSpriteFrame(anim, player.frameIndex);
+  const zoom = 1.5;
+  const drawHeight = player.height * zoom;
+  const drawWidth = player.width * zoom;
+  const drawX = player.x;
+  const drawY = player.y + player.height - drawHeight;
+  ctx.save();
+  if (player.facing === -1) {
+    ctx.translate(drawX + drawWidth / 2, 0);
+    ctx.scale(-1, 1);
+    ctx.translate(-drawX - drawWidth / 2, 0);
+  }
+  ctx.drawImage(
+    playerImg,
+    sx, sy, sw, sh,
+    drawX, drawY, drawWidth, drawHeight
+  );
+  ctx.restore();
+}
+
+/**
+ * Main game loop. Calls update and render, then schedules next frame.
+ */
+function gameLoop() {
+  update();
+  render();
+  requestAnimationFrame(gameLoop);
+}
+
+/**
+ * Initialize the game. Loads assets and starts the game loop.
+ */
+export function init() {
+  setupKeyboardListeners();
+  playerImg.onload = gameLoop;
+}
