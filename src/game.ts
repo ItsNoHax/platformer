@@ -160,7 +160,8 @@ function render() {
 
   // 3. Moon (moves a bit faster than far clouds)
   const moonOffset = (player.x * 0.15) % canvas.width;
-  ctx.drawImage(moonImg, canvas.width * 0.7 - moonOffset, canvas.height * 0.1, canvas.width * 0.3, canvas.height * 0.3);
+  const moonScale = 3;
+  ctx.drawImage(moonImg, canvas.width * 0.5 - moonOffset, canvas.height * 0.1 / moonScale, canvas.width * 0.3 * moonScale, canvas.height * 0.3 * moonScale);
 
   // 4. Near clouds (move faster)
   const nearCloudsOffset = (player.x * 0.3) % canvas.width;
