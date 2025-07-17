@@ -27,6 +27,11 @@ This is a simple platformer game starter built with Vite and TypeScript.
 ## Asset
 - Player sprite: `public/assets/ninja_full.png`
 
+## Live Demo
+You can test the latest version of the game at:
+
+👉 [https://itsnohax.github.io/platformer/](https://itsnohax.github.io/platformer/)
+
 ---
 
 This project was bootstrapped with Vite's vanilla TypeScript template.
