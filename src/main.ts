@@ -1,4 +1,5 @@
 import './style.css'
+import ninjaFullUrl from '../public/assets/ninja_full.png';
 
 const canvas = document.getElementById('gameCanvas') as HTMLCanvasElement;
 const ctx = canvas.getContext('2d')!;
@@ -26,7 +27,7 @@ const gravity = 0.3;
 
 // Load player sprite
 const playerImg = new Image();
-playerImg.src = '/assets/ninja_full.png';
+playerImg.src = ninjaFullUrl;
 
 // Animation properties for the player
 const idleAnim = {
