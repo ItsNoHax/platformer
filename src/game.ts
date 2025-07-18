@@ -42,8 +42,9 @@ cloudsFarImg.src = cloudsFarUrl;
 
 /**
  * Update game state: player movement, physics, animation.
+ * Accepts deltaTime in seconds for frame-rate independent updates.
  */
-function update() {
+function update(deltaTime: number) {
   player.isWalking = false;
   // Handle left/right/crouch movement
   if (isDownKeyPressed()) {
@@ -66,10 +67,10 @@ function update() {
     player.onGround = false;
   }
 
-  // Apply gravity and update position
-  player.vy += gravity;
-  player.x += player.vx;
-  player.y += player.vy;
+  // Apply gravity and update position (scaled by deltaTime)
+  player.vy += gravity * deltaTime * 60;
+  player.x += player.vx * deltaTime * 60;
+  player.y += player.vy * deltaTime * 60;
 
   // Ground collision
   if (player.y + player.height >= canvas.height - 10) {
@@ -102,7 +103,7 @@ function update() {
     player.state = 'idle';
   }
 
-  // Animation update
+  // Animation update (frameTimer scaled by deltaTime)
   let anim: Animation;
   switch (player.state) {
     case 'walk':
@@ -124,7 +125,7 @@ function update() {
   if (player.frameIndex > anim.frames - 1) {
     player.frameIndex = anim.frames - 1;
   }
-  player.frameTimer++;
+  player.frameTimer += deltaTime * 60;
   if (player.state === 'crouch') {
     // Play crouch animation once, then hold last frame
     if (player.frameIndex < anim.frames - 1 && player.frameTimer >= 60 / anim.frameRate) {
@@ -213,9 +214,13 @@ function render() {
 
 /**
  * Main game loop. Calls update and render, then schedules next frame.
+ * Uses variable timestep for uncapped fps and consistent experience.
  */
-function gameLoop() {
-  update();
+let lastTime = performance.now();
+function gameLoop(now = performance.now()) {
+  const deltaTime = Math.min((now - lastTime) / 1000, 0.05); // seconds, clamp to avoid spiral of death
+  lastTime = now;
+  update(deltaTime);
   render();
   requestAnimationFrame(gameLoop);
 }
